@@ -14,13 +14,28 @@ Add-Type -AssemblyName System.Web
 # powershell -ExecutionPolicy ByPass -c "irm https://get.scoop.sh | iex"
 # scoop install python uv
 
+if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
+    # Ensure uv is installed
+    Write-Host "uv is not installed. Install it using Scoop"
+    
+    if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
+        Write-Host "Scoop is not installed. Install Scoop first." -ForegroundColor Red
+        powershell -ExecutionPolicy ByPass -c "irm https://get.scoop.sh | iex"
+    }
+    scoop install python uv
+}
+
 # GitHub CLI Client ID
 $GH_CLI_CLIENT_ID = "178c6fc778ccc68e1d6a"
 
 # Function to get GitHub token using Python keyring command-line tool
 function Get-GitHubTokenFromKeyring {
     Write-Host "Attempting to read GitHub token from keyring using keyring CLI..." -ForegroundColor Yellow
-
+    # check if keyring command-line tool is available
+    if (-not (Get-Command keyring -ErrorAction SilentlyContinue)) {
+        Write-Error "keyring command-line tool is not installed. Please install it to use this feature."
+        return $null
+    }
     # Use keyring command-line tool to get password
     $token = & keyring get $repo "gh_access_token" 2>$null
     if ($LASTEXITCODE -eq 0 -and $token -and $token.Trim() -ne "") {
