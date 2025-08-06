@@ -109,13 +109,7 @@ function Get-GitHubToken {
 function Get-LatestRelease {
     param(
         [Parameter(Mandatory=$true)]
-        [string]$GitHubToken,
-        
-        [Parameter(Mandatory=$true)]
-        [string]$org,
-        
-        [Parameter(Mandatory=$true)]
-        [string]$repo
+        [string]$GitHubToken
     )
 
     $apiHeaders = @{
