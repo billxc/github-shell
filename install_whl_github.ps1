@@ -85,7 +85,7 @@ function Get-GitHubToken {
                 
                 if ($tokenResponse.access_token) {
                     Write-Host "Successfully authenticated and received access token." -ForegroundColor Green
-                    Store-GitHubTokenInKeyring -token $tokenResponse.access_token
+                    $ignore_output = Store-GitHubTokenInKeyring -token $tokenResponse.access_token
                     return $tokenResponse.access_token
                 }
             }
@@ -166,42 +166,37 @@ function Get-LatestRelease {
 }
 
 # Main execution
-try {
-    # Check for environment variable first
-    $envToken = $env:GH_CLI_TOKEN
-    if ($envToken) {
-        Write-Host "Using GitHub token from environment variable GH_CLI_TOKEN" -ForegroundColor Green
-        $token = $envToken
-    } else {
-        # Try to read from keyring using Python keyring library
-        Write-Host "Environment variable GH_CLI_TOKEN not found, attempting to read from keyring..." -ForegroundColor Yellow
-        $token = Get-GitHubTokenFromKeyring
-        
-        if (-not $token) {
-            Write-Host "No GitHub token found in keyring, requesting new token..." -ForegroundColor Yellow
-            $token = Get-GitHubToken
-        }
-    }
+# Check for environment variable first
+$envToken = $env:GH_CLI_TOKEN
+if ($envToken) {
+    Write-Host "Using GitHub token from environment variable GH_CLI_TOKEN" -ForegroundColor Green
+    $token = $envToken
+} else {
+    # Try to read from keyring using Python keyring library
+    Write-Host "Environment variable GH_CLI_TOKEN not found, attempting to read from keyring..." -ForegroundColor Yellow
+    $token = Get-GitHubTokenFromKeyring
     
-    $downloadedFile = Get-LatestRelease -GitHubToken $token
-    Write-Host "GitHub access token: $($token.Substring(0, [Math]::Min(10, $token.Length)))..." -ForegroundColor Green
-    
-    if ($downloadedFile) {
-        Write-Host "Downloaded file: $(Split-Path $downloadedFile -Leaf)" -ForegroundColor Green
-        # Install the downloaded package
-        uv tool install $downloadedFile
-        
-        # Clean up temporary file
-        try {
-            Remove-Item $downloadedFile -Force
-            Write-Host "Cleaned up temporary file" -ForegroundColor Green
-        }
-        catch {
-            Write-Warning "Could not clean up temporary file: $downloadedFile"
-        }
+    if (-not $token) {
+        Write-Host "No GitHub token found in keyring, requesting new token..." -ForegroundColor Yellow
+        $token = Get-GitHubToken
     }
 }
-catch {
-    Write-Error "Failed to complete GitHub operations: $($_.Exception.Message)"
-    exit 1
+
+Write-Host "GitHub access token: $token..." -ForegroundColor Green
+# Write-Host "GitHub access token: $($token.Substring(0, [Math]::Min(10, $token.Length)))..." -ForegroundColor Green
+$downloadedFile = Get-LatestRelease $token
+
+if ($downloadedFile) {
+    Write-Host "Downloaded file: $(Split-Path $downloadedFile -Leaf)" -ForegroundColor Green
+    # Install the downloaded package
+    uv tool install $downloadedFile
+    
+    # Clean up temporary file
+    try {
+        Remove-Item $downloadedFile -Force
+        Write-Host "Cleaned up temporary file" -ForegroundColor Green
+    }
+    catch {
+        Write-Warning "Could not clean up temporary file: $downloadedFile"
+    }
 }
