@@ -182,8 +182,8 @@ if ($envToken) {
     }
 }
 
-Write-Host "GitHub access token: $token..." -ForegroundColor Green
-# Write-Host "GitHub access token: $($token.Substring(0, [Math]::Min(10, $token.Length)))..." -ForegroundColor Green
+# Write-Host "GitHub access token: $token..." -ForegroundColor Green
+Write-Host "GitHub access token: $($token.Substring(0, [Math]::Min(10, $token.Length)))..." -ForegroundColor Green
 $downloadedFile = Get-LatestRelease $token
 
 if ($downloadedFile) {
