@@ -10,7 +10,7 @@ param(
     [string]$filePath,
 
     [Parameter(Mandatory=$false)]
-    [string]$outputPath = ".",
+    [string]$outputPath = $null,
 
     [Parameter(Mandatory=$false)]
     [string]$branch = "main"
